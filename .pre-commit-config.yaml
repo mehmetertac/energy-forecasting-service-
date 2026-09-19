@@ -1,0 +1,16 @@
+repos:
+  - repo: local
+    hooks:
+      - id: check-file-size
+        name: Check file size (max 1000 lines)
+        entry: python scripts/check_file_size.py
+        language: system
+        pass_filenames: false
+        always_run: true
+
+      - id: pytest
+        name: Run unit tests
+        entry: python scripts/run_pytest.py
+        language: system
+        pass_filenames: false
+        always_run: true

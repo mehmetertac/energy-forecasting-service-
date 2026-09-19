@@ -1,0 +1,41 @@
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Data (keep README)
+data/raw/
+data/processed/
+data/*
+!data/.gitkeep
+!data/README.md
+
+# Training / tracking artifacts
+artifacts/*
+!artifacts/.gitkeep
+mlruns/
+wandb/
+lightning_logs/
+checkpoints/
+*.pt
+*.pth
+*.ckpt
+
+# Secrets / local env
+.env
+.env.*
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
