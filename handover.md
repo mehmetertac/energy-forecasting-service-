@@ -89,4 +89,4 @@ Three 2-fold / 2-epoch / 2-plant runs, `hidden_size` ∈ {16, 32, 64}. Open with
 
 ## Key commit
 
-`main` — scaffold the service repo, port the Week 5 TFT + feature pipeline, and add MLflow tracking (hash filled after this push).
+`1218dc1` — scaffold the service repo, port the Week 5 TFT + feature pipeline, and add MLflow tracking.
