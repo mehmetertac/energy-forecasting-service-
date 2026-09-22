@@ -1,5 +1,5 @@
 # Docker
 
-Placeholder for the Week 9 serving image (FastAPI + TFT checkpoint).
+FastAPI batch inference is wired (`POST /forecast`, `GET /health`) and loads the production model from MLflow Model Registry via `get_production_model()`.
 
-Not wired in this task. The API contract to implement later: JSON with `pred_q10`, `pred_q50`, `pred_q90` per plant and horizon.
+The Docker image (FastAPI + `[serve]` extra + registry URI) is the next packaging step — not built yet.

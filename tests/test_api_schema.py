@@ -23,7 +23,12 @@ def test_quantile_forecast_fields():
 
 
 def test_forecast_response_quantiles():
-    payload = ForecastResponse(forecasts=[])
+    payload = ForecastResponse(
+        model_name="tft-solar-quantile",
+        model_version="1",
+        model_stage="Production",
+        forecasts=[],
+    )
     assert payload.quantiles == (0.1, 0.5, 0.9)
 
 
@@ -33,8 +38,21 @@ def test_create_app_health():
     from fastapi.testclient import TestClient
 
     from energy_forecasting.api.app import create_app
+    from energy_forecasting.model.registry import ProductionModelInfo
 
-    client = TestClient(create_app())
-    assert client.get("/health").json() == {"status": "ok"}
+    info = ProductionModelInfo(
+        name="tft-solar-quantile",
+        version="1",
+        stage="Production",
+        run_id="schema-test",
+        uri="models:/tft-solar-quantile/Production",
+    )
+    client = TestClient(create_app(get_model=lambda: info))
+    health = client.get("/health").json()
+    assert health["status"] == "ok"
+    assert health["model_version"] == "1"
+    assert health["inference_mode"] == "batch"
     body = client.get("/schema").json()
     assert body["quantiles"] == [0.1, 0.5, 0.9]
+    assert body["inference_mode"] == "batch"
+    assert "model_version" in body

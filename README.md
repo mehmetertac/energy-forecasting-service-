@@ -43,7 +43,69 @@ pre-commit install
 
 The P10–P90 band is an 80% prediction interval. If empirical coverage on rolling-origin folds is well below 80%, a dispatcher using the band as a reserve envelope is **under-hedged**. If coverage is far above 80%, the band is too wide and you over-procure reserve. CRPS and pinball (not MAE) are the metrics that decide whether a training run is better for this use.
 
-Serving (FastAPI + Streamlit, later this week) will expose the same three quantiles — never a single MW point without the band.
+Serving exposes the same three quantiles — never a single MW point without the band.
+
+## Inference mode: batch (day-ahead)
+
+Day-ahead TFT needs a **168h encoder**, known-future calendar/solar rows for all **24 decoder steps**, and a rebuilt `TimeSeriesDataSet`. That work belongs on a **schedule** (e.g. nightly precompute), not inside a request handler.
+
+| Mode | When it fits | This repo |
+|------|----------------|-----------|
+| **Batch** | Day-ahead dispatch: forecasts fixed until the next scheduled run | **Default** — API serves cached quantiles from MLflow Model Registry |
+| **On-demand** | Intra-day reforecasts when new NWP or meter data arrives | Not implemented; `known_future` on the request schema is reserved for a later path |
+| **Streaming** | Sub-hourly updates pushed to subscribers | Out of scope; would matter for real-time reserve or ramp alerts |
+
+The API resolves `models:/tft-solar-quantile/Production` via `get_production_model()` — **not** a local checkpoint path.
+
+### Register + serve locally
+
+```powershell
+pip install -e ".[serve]"
+python scripts/register_model.py
+uvicorn energy_forecasting.api.app:app --host 127.0.0.1 --port 8000
+```
+
+Smoke the endpoints:
+
+```powershell
+curl http://127.0.0.1:8000/health
+curl -X POST http://127.0.0.1:8000/forecast -H "Content-Type: application/json" -d "{\"plant_id\":\"DE_PV_001\",\"horizon\":24}"
+```
+
+**Request** (`POST /forecast`):
+
+```json
+{
+  "plant_id": "DE_PV_001",
+  "horizon": 24,
+  "as_of": null,
+  "known_future": null
+}
+```
+
+**Response** (excerpt):
+
+```json
+{
+  "quantiles": [0.1, 0.5, 0.9],
+  "inference_mode": "batch",
+  "model_name": "tft-solar-quantile",
+  "model_version": "1",
+  "model_stage": "Production",
+  "forecasts": [
+    {
+      "timestamp": "2020-01-30T10:00:00Z",
+      "plant_id": "DE_PV_001",
+      "horizon": 1,
+      "pred_q10": 37.1,
+      "pred_q50": 212.0,
+      "pred_q90": 462.9
+    }
+  ]
+}
+```
+
+First request loads the pyfunc model from the registry (~seconds); warm lookups are sub-second. Quantiles are clipped to enforce P10 ≤ P50 ≤ P90.
 
 ## Experiment tracking
 
@@ -72,8 +134,10 @@ python scripts/train.py --n-splits 2 --max-epochs 2 --max-plants 2 --hidden-size
 ```
 src/energy_forecasting/data/    # OPSD + Open-Meteo, features
 src/energy_forecasting/model/   # TFT, metrics, CV, MLflow tracking
-src/energy_forecasting/api/     # P10/P50/P90 schema; FastAPI stub
+src/energy_forecasting/api/     # P10/P50/P90 schema + FastAPI batch inference
+src/energy_forecasting/model/registry.py  # MLflow Model Registry + get_production_model()
 scripts/train.py                # rolling-origin CV + tracking
+scripts/register_model.py       # register best run → Production
 scripts/fetch_data.py
 tests/                          # unit tests on synthetic data (CI)
 dashboard/                      # Streamlit (next)

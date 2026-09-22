@@ -14,7 +14,7 @@ jobs:
         with:
           python-version: "3.11"
       - name: Install package (no torch)
-        run: pip install -e ".[dev]"
+        run: pip install -e ".[dev,serve]"
       - name: File size guard
         run: python scripts/check_file_size.py
       - name: Unit tests
