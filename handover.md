@@ -104,4 +104,4 @@ Three 2-fold / 2-epoch / 2-plant runs, `hidden_size` ∈ {16, 32, 64}. Best by `
 
 ## Key commit
 
-`f41aab7` — MLflow Model Registry + FastAPI batch inference (`POST /forecast`, `get_production_model`).
+`704a366` — MLflow Model Registry + FastAPI batch inference (`POST /forecast`, `get_production_model`).
