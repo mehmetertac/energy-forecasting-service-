@@ -50,7 +50,9 @@ def main() -> None:
     for root, _dirs, files in os.walk(args.store):
         os.chmod(root, stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
         for name in files:
-            os.chmod(Path(root) / name, stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IWGRP | stat.S_IROTH | stat.S_IWOTH)
+            path = Path(root) / name
+            mode = stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IWGRP | stat.S_IROTH | stat.S_IWOTH
+            os.chmod(path, mode)
 
     print(f"seeded {result.uri} at {args.store.resolve()}")
 

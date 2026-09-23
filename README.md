@@ -1,5 +1,7 @@
 # energy-forecasting-service
 
+[![ci](https://github.com/mehmetertac/energy-forecasting-service-/actions/workflows/ci.yml/badge.svg)](https://github.com/mehmetertac/energy-forecasting-service-/actions/workflows/ci.yml)
+
 Recruiter-facing MLOps repo: take a **Week 5 Temporal Fusion Transformer** through experiment tracking, then (this week) Docker, FastAPI, CI, and a Streamlit demo.
 
 The served contract is **probabilistic throughout**: **P10 / P50 / P90**. Point MAE is a side metric, not the product.
@@ -154,7 +156,7 @@ tests/                          # unit tests on synthetic data (CI)
 dashboard/                      # Streamlit stub (placeholder on :8501 in compose)
 docker/                         # Dockerfile, compose notes, seed helper
 docker-compose.yml              # API + MLflow + dashboard stub
-.github/workflows/tests.yml
+.github/workflows/ci.yml
 ```
 
 ## Docs

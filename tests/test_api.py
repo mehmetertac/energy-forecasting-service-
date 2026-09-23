@@ -108,6 +108,48 @@ def test_forecast_unknown_plant(tmp_path: Path):
     assert response.status_code == 404
 
 
+@pytest.fixture
+def api_client(tmp_path: Path):
+    forecast_path = tmp_path / "forecasts.parquet"
+    _sample_forecast_parquet(forecast_path)
+    tracking_uri = tmp_path / "mlruns"
+    model_name = "tft-api-validation"
+
+    package_local_forecast(
+        forecast_path=forecast_path,
+        model_name=model_name,
+        tracking_uri=tracking_uri,
+    )
+    info = ProductionModelInfo(
+        name=model_name,
+        version="1",
+        stage="Production",
+        run_id="test-run",
+        uri=f"models:/{model_name}/Production",
+    )
+
+    def load_pyfunc():
+        from energy_forecasting.model.registry import load_production_pyfunc
+
+        return load_production_pyfunc(model_name=model_name, tracking_uri=tracking_uri)
+
+    return TestClient(create_app(get_model=lambda: info, load_pyfunc=load_pyfunc))
+
+
+@pytest.mark.parametrize(
+    "payload",
+    [
+        {"plant_id": "", "horizon": 24},
+        {"horizon": 24},
+        {"plant_id": "DE_PV_001", "horizon": 0},
+        {"plant_id": "DE_PV_001", "horizon": 48},
+    ],
+)
+def test_forecast_rejects_bad_input(api_client: TestClient, payload: dict):
+    response = api_client.post("/forecast", json=payload)
+    assert response.status_code == 422
+
+
 def test_health_includes_model_version(tmp_path: Path):
     forecast_path = tmp_path / "forecasts.parquet"
     _sample_forecast_parquet(forecast_path)

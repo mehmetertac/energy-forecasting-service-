@@ -98,7 +98,7 @@ def crps_from_quantiles(
 
     losses = []
     widths = []
-    for q_lo, q_hi in zip(qs[:-1], qs[1:]):
+    for q_lo, q_hi in zip(qs[:-1], qs[1:], strict=True):
         width = q_hi - q_lo
         q_mid = 0.5 * (q_lo + q_hi)
         yq = np.asarray(predictions[q_mid if q_mid in predictions else q_lo], dtype=float)

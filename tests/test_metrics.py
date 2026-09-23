@@ -3,16 +3,16 @@
 from __future__ import annotations
 
 import numpy as np
+import pandas as pd
 import pytest
 
 from energy_forecasting.model.metrics import (
     crps_from_quantiles,
     evaluate_quantile_forecast,
     filter_horizon,
-    pinball_loss,
     pi_coverage,
+    pinball_loss,
 )
-import pandas as pd
 
 
 def test_pinball_perfect_median():

@@ -11,10 +11,10 @@ from typing import Any
 if sys.platform == "win32":
     os.add_dll_directory(r"C:\Windows\System32")
 
-import torch
 import lightning.pytorch as pl
 import numpy as np
 import pandas as pd
+import torch
 from lightning.pytorch.callbacks import EarlyStopping, ModelCheckpoint
 from pytorch_forecasting import TemporalFusionTransformer, TimeSeriesDataSet
 from pytorch_forecasting.data import GroupNormalizer
@@ -311,7 +311,7 @@ class TFTForecaster:
                     "horizon": h + 1,
                     TARGET_COL: np.nan,
                 }
-                for q_i, q in enumerate(self.quantiles):
+                for q_i, _q in enumerate(self.quantiles):
                     row[q_cols[q_i]] = float(pred_arr[i, h, q_i])
                 rows.append(row)
 

@@ -1,6 +1,6 @@
 # Handover
 
-**Last updated:** 2026-09-22
+**Last updated:** 2026-09-23
 
 Week 9 project: **energy-forecasting-service** — ship the Week 5 TFT with MLOps (tracking first).
 
@@ -16,7 +16,7 @@ Remote: https://github.com/mehmetertac/energy-forecasting-service-.git
 | MLflow Model Registry + production loader | Done — `tft-solar-quantile` Staging → Production via `scripts/register_model.py` |
 | FastAPI batch inference | Done — `GET /health`, `POST /forecast` (P10/P50/P90 + model version) |
 | W&B optional `--wandb` mirror | Wired; not executed (no `WANDB_API_KEY` on this machine) |
-| Unit tests + pre-commit + GitHub Actions (no torch in CI) | Done — includes registry + API tests with `[serve]` extra |
+| Unit tests + pre-commit + GitHub Actions CI (no torch) | Done — calendar/solar feature values, model contract (finite ordered quantiles, horizon length), API schema + 422 validation; ruff + pytest + Docker build on every push/PR |
 | Docker image + compose | Done — multi-stage serve image (~1.39 GB), `docker compose up` (API + MLflow + dashboard stub) |
 | Streamlit dashboard | Placeholder — stdlib HTTP stub on :8501 in compose |
 
@@ -71,7 +71,7 @@ python scripts/fetch_data.py
 | `docker-compose.yml` | API + MLflow server + dashboard stub |
 | `requirements.lock` | Pinned `[serve]` deps for Linux builds |
 | `tests/` | Synthetic unit tests |
-| `.github/workflows/tests.yml` | pytest on every push |
+| `.github/workflows/ci.yml` | ruff, pytest, Docker build on every push/PR (required check) |
 | `mlruns/` | Local MLflow store (gitignored) |
 | `artifacts/` | Metrics, OOF parquet, checkpoints, plots |
 
@@ -115,4 +115,4 @@ Three 2-fold / 2-epoch / 2-plant runs, `hidden_size` ∈ {16, 32, 64}. Best by `
 
 ## Key commit
 
-Dockerize — multi-stage serve image, compose stack, runtime MLflow model pull (`MLFLOW_TRACKING_URI`, `docker-compose.yml`, `requirements.lock`).
+CI hardening — feature/model/API contract tests, `ci.yml` (ruff + pytest + Docker build), README badge, required `ci` check on `main`.

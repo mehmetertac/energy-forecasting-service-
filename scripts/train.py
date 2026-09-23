@@ -12,9 +12,8 @@ from pathlib import Path
 if sys.platform == "win32":
     os.add_dll_directory(r"C:\Windows\System32")
 
-import torch  # preload before lightning (via TFTForecaster import)
-
 import pandas as pd
+import torch  # noqa: F401  # preload before lightning (via TFTForecaster import)
 
 from energy_forecasting.config import (
     CV_N_SPLITS,
