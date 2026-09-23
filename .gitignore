@@ -1,5 +1,6 @@
 # Python
 .venv/
+.lock-venv/
 __pycache__/
 *.py[cod]
 *.egg-info/
@@ -23,6 +24,8 @@ data/*
 artifacts/*
 !artifacts/.gitkeep
 mlruns/
+docker/mlruns-seed/
+docker/mlruns-seed-linux/
 wandb/
 lightning_logs/
 checkpoints/

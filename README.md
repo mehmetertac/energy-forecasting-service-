@@ -107,6 +107,17 @@ curl -X POST http://127.0.0.1:8000/forecast -H "Content-Type: application/json" 
 
 First request loads the pyfunc model from the registry (~seconds); warm lookups are sub-second. Quantiles are clipped to enforce P10 ≤ P50 ≤ P90.
 
+## Docker
+
+Multi-stage **serve-only** image (~**1.39 GB** — no torch). Model artifacts are **pulled at runtime** from MLflow, not baked in. See [docker/README.md](docker/README.md) for bake-vs-pull trade-offs and CPU-torch trim notes.
+
+```powershell
+docker build -t energy-forecasting-api .
+docker compose up --build   # API :8000, MLflow :5000, dashboard stub :8501
+```
+
+Seed a smoke Production model into the compose volume, then hit `POST /forecast` — details in [docker/README.md](docker/README.md).
+
 ## Experiment tracking
 
 **MLflow is the backbone** (self-managed, `./mlruns`). Each training run logs:
@@ -140,8 +151,9 @@ scripts/train.py                # rolling-origin CV + tracking
 scripts/register_model.py       # register best run → Production
 scripts/fetch_data.py
 tests/                          # unit tests on synthetic data (CI)
-dashboard/                      # Streamlit (next)
-docker/                         # image (next)
+dashboard/                      # Streamlit stub (placeholder on :8501 in compose)
+docker/                         # Dockerfile, compose notes, seed helper
+docker-compose.yml              # API + MLflow + dashboard stub
 .github/workflows/tests.yml
 ```
 

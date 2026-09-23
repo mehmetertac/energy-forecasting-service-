@@ -13,8 +13,8 @@ Guidance for agents working in **energy-forecasting-service**. Read this file fi
 | [WEEK_09_REFLECTION.md](WEEK_09_REFLECTION.md) | Week 9 build notes |
 | [data/README.md](data/README.md) | OPSD / Open-Meteo provenance and schemas |
 | [notebooks/README.md](notebooks/README.md) | Notebooks are thin drivers only |
-| [docker/README.md](docker/README.md) | Serving image (not wired yet) |
-| [dashboard/README.md](dashboard/README.md) | Streamlit demo (not wired yet) |
+| [docker/README.md](docker/README.md) | Multi-stage serve image + compose stack |
+| [dashboard/README.md](dashboard/README.md) | Streamlit demo (compose stub on :8501) |
 | [src/energy_forecasting/data/](src/energy_forecasting/data/) | Fetch, disaggregate, calendar/solar/weather features |
 | [src/energy_forecasting/model/](src/energy_forecasting/model/) | TFT, metrics, rolling-origin CV, MLflow tracking |
 | [src/energy_forecasting/api/](src/energy_forecasting/api/) | Quantile forecast schema + FastAPI stub |

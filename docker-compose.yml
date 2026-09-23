@@ -1,0 +1,44 @@
+services:
+  mlflow:
+    image: ghcr.io/mlflow/mlflow:v2.19.0
+    command: >
+      mlflow server
+      --host 0.0.0.0
+      --port 5000
+      --backend-store-uri file:///mlflow
+      --default-artifact-root file:///mlflow/artifacts
+      --serve-artifacts
+    volumes:
+      - mlflow-data:/mlflow
+    ports:
+      - "5000:5000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:5000/')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      MLFLOW_TRACKING_URI: http://mlflow:5000
+    volumes:
+      - mlflow-data:/mlflow
+    depends_on:
+      mlflow:
+        condition: service_healthy
+
+  dashboard:
+    image: python:3.11-slim-bookworm
+    working_dir: /app
+    volumes:
+      - ./dashboard/stub_server.py:/app/stub_server.py:ro
+    command: ["python", "stub_server.py"]
+    ports:
+      - "8501:8501"
+
+volumes:
+  mlflow-data:

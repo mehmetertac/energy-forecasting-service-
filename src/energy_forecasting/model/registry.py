@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import os
 import shutil
 import tempfile
 from dataclasses import dataclass
@@ -56,8 +57,18 @@ class RegisteredModelResult:
     uri: str
 
 
+def _default_tracking_uri(tracking_uri: str | Path | None = None) -> str:
+    """Resolve tracking URI: explicit arg, then MLFLOW_TRACKING_URI, then MLRUNS_DIR."""
+    if tracking_uri is not None:
+        return _resolve_tracking_uri(tracking_uri)
+    env_uri = os.environ.get("MLFLOW_TRACKING_URI")
+    if env_uri:
+        return _resolve_tracking_uri(env_uri)
+    return _resolve_tracking_uri(MLRUNS_DIR)
+
+
 def _client(tracking_uri: str | Path | None = None) -> MlflowClient:
-    uri = _resolve_tracking_uri(tracking_uri or MLRUNS_DIR)
+    uri = _default_tracking_uri(tracking_uri)
     mlflow.set_tracking_uri(uri)
     return MlflowClient(tracking_uri=uri)
 
@@ -69,7 +80,7 @@ def select_best_run(
     tracking_uri: str | Path | None = None,
 ) -> str:
     """Return the run ID with the lowest ``metric`` in the experiment."""
-    uri = _resolve_tracking_uri(tracking_uri or MLRUNS_DIR)
+    uri = _default_tracking_uri(tracking_uri)
     mlflow.set_tracking_uri(uri)
     experiment = mlflow.get_experiment_by_name(experiment_name)
     if experiment is None:
@@ -276,7 +287,7 @@ def load_production_pyfunc(
 ) -> tuple[ProductionModelInfo, mlflow.pyfunc.PyFuncModel]:
     """Load the pyfunc model for the current production stage."""
     info = get_production_model(model_name=model_name, stage=stage, tracking_uri=tracking_uri)
-    uri = _resolve_tracking_uri(tracking_uri or MLRUNS_DIR)
+    uri = _default_tracking_uri(tracking_uri)
     mlflow.set_tracking_uri(uri)
     model = mlflow.pyfunc.load_model(info.uri)
     return info, model
@@ -292,7 +303,7 @@ def package_local_forecast(
     promote: bool = True,
 ) -> RegisteredModelResult:
     """Register from local paths (used by unit tests)."""
-    uri = _resolve_tracking_uri(tracking_uri or MLRUNS_DIR)
+    uri = _default_tracking_uri(tracking_uri)
     mlflow.set_tracking_uri(uri)
     mlflow.set_experiment("registry-unit-test")
 

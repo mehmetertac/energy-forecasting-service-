@@ -94,3 +94,24 @@ def test_select_best_run(tmp_path: Path):
 def test_select_best_run_missing_experiment(tmp_path: Path):
     with pytest.raises(RuntimeError, match="experiment not found"):
         select_best_run(experiment_name="missing-exp", tracking_uri=tmp_path / "mlruns")
+
+
+def test_get_production_model_uses_mlflow_tracking_uri_env(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    forecast_path = tmp_path / "forecasts.parquet"
+    _sample_forecast_parquet(forecast_path)
+    tracking_uri = tmp_path / "mlruns"
+    model_name = f"{REGISTERED_MODEL_NAME}-env"
+
+    package_local_forecast(
+        forecast_path=forecast_path,
+        model_name=model_name,
+        tracking_uri=tracking_uri,
+    )
+
+    from energy_forecasting.model.tracking import _resolve_tracking_uri
+
+    monkeypatch.setenv("MLFLOW_TRACKING_URI", _resolve_tracking_uri(tracking_uri))
+    info = get_production_model(model_name=model_name)
+    assert info.version == "1"
+    assert info.stage == "Production"
+    assert info.uri == f"models:/{model_name}/Production"

@@ -1,0 +1,41 @@
+# Python / local env
+.venv/
+.lock-venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Git / IDE
+.git/
+.gitignore
+.idea/
+.vscode/
+
+# Data and artifacts (model pulled at runtime, not baked in)
+data/
+artifacts/
+mlruns/
+wandb/
+lightning_logs/
+checkpoints/
+*.pt
+*.pth
+*.ckpt
+
+# Secrets
+.env
+.env.*
+
+# Notebooks / docs not needed at runtime
+notebooks/
+*.md
+!README.md
+
+# Docker build context noise
+docker-compose*.yml
+Dockerfile*
