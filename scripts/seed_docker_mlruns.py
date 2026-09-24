@@ -22,6 +22,7 @@ def _sample_forecast_parquet(path: Path) -> None:
             "pred_q10": [float(i) for i in range(24)],
             "pred_q50": [float(i + 1) for i in range(24)],
             "pred_q90": [float(i + 2) for i in range(24)],
+            "y": [float(i + 1.5) for i in range(24)],
         }
     )
     df.to_parquet(path, index=False)
@@ -47,6 +48,18 @@ def main() -> None:
         tracking_uri=args.store,
         run_name="docker-seed",
     )
+
+    from mlflow import MlflowClient
+
+    tracking_uri = args.store.resolve().as_uri()
+    client = MlflowClient(tracking_uri=tracking_uri)
+    for key, value in {
+        "mean_pinball_q10": 0.42,
+        "mean_pinball_q50": 0.21,
+        "mean_pinball_q90": 0.38,
+        "mean_pi_coverage": 0.78,
+    }.items():
+        client.log_metric(result.run_id, key, value)
     for root, _dirs, files in os.walk(args.store):
         os.chmod(root, stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
         for name in files:

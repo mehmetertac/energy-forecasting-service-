@@ -14,13 +14,13 @@ Guidance for agents working in **energy-forecasting-service**. Read this file fi
 | [data/README.md](data/README.md) | OPSD / Open-Meteo provenance and schemas |
 | [notebooks/README.md](notebooks/README.md) | Notebooks are thin drivers only |
 | [docker/README.md](docker/README.md) | Multi-stage serve image + compose stack |
-| [dashboard/README.md](dashboard/README.md) | Streamlit demo (compose stub on :8501) |
+| [dashboard/README.md](dashboard/README.md) | Streamlit dashboard (compose on :8501) |
 | [src/energy_forecasting/data/](src/energy_forecasting/data/) | Fetch, disaggregate, calendar/solar/weather features |
 | [src/energy_forecasting/model/](src/energy_forecasting/model/) | TFT, metrics, rolling-origin CV, MLflow tracking |
-| [src/energy_forecasting/api/](src/energy_forecasting/api/) | Quantile forecast schema + FastAPI stub |
+| [src/energy_forecasting/api/](src/energy_forecasting/api/) | Quantile forecast schema + FastAPI batch inference |
 | [tests/](tests/) | Unit tests on synthetic frames (CI does not download OPSD) |
 
-Headline contract: **probabilistic forecasts (P10/P50/P90)** through training metrics, MLflow, API schema, and (later) the dashboard. Do not collapse the product to a point forecast.
+Headline contract: **probabilistic forecasts (P10/P50/P90)** through training metrics, MLflow, API schema, and the dashboard. Do not collapse the product to a point forecast.
 
 Source model: Week 5 [`multi-site-solar-hierarchy`](https://github.com/mehmetertac/multi-site-solar-hierarchy). Do not port MinT / N-HiTS unless a later task asks.
 

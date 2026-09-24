@@ -71,6 +71,8 @@ Smoke the endpoints:
 
 ```powershell
 curl http://127.0.0.1:8000/health
+curl http://127.0.0.1:8000/plants
+curl http://127.0.0.1:8000/metrics
 curl -X POST http://127.0.0.1:8000/forecast -H "Content-Type: application/json" -d "{\"plant_id\":\"DE_PV_001\",\"horizon\":24}"
 ```
 
@@ -101,7 +103,8 @@ curl -X POST http://127.0.0.1:8000/forecast -H "Content-Type: application/json" 
       "horizon": 1,
       "pred_q10": 37.1,
       "pred_q50": 212.0,
-      "pred_q90": 462.9
+      "pred_q90": 462.9,
+      "actual": 205.0
     }
   ]
 }
@@ -115,10 +118,20 @@ Multi-stage **serve-only** image (~**1.39 GB** — no torch). Model artifacts ar
 
 ```powershell
 docker build -t energy-forecasting-api .
-docker compose up --build   # API :8000, MLflow :5000, dashboard stub :8501
+docker compose up --build   # API :8000, MLflow :5000, dashboard :8501
 ```
 
-Seed a smoke Production model into the compose volume, then hit `POST /forecast` — details in [docker/README.md](docker/README.md).
+Seed a smoke Production model into the compose volume, then open the dashboard on :8501 or hit `POST /forecast` — details in [docker/README.md](docker/README.md).
+
+### Dashboard
+
+```powershell
+pip install -r dashboard/requirements.txt
+$env:API_URL = "http://127.0.0.1:8000"
+streamlit run dashboard/app.py
+```
+
+Site selector, horizon slider, P50 line with P10–P90 band over actuals, and a pinball/coverage panel. See [dashboard/README.md](dashboard/README.md).
 
 ## Experiment tracking
 
@@ -153,9 +166,9 @@ scripts/train.py                # rolling-origin CV + tracking
 scripts/register_model.py       # register best run → Production
 scripts/fetch_data.py
 tests/                          # unit tests on synthetic data (CI)
-dashboard/                      # Streamlit stub (placeholder on :8501 in compose)
+dashboard/                      # Streamlit dashboard (:8501 in compose)
 docker/                         # Dockerfile, compose notes, seed helper
-docker-compose.yml              # API + MLflow + dashboard stub
+docker-compose.yml              # API + MLflow + dashboard
 .github/workflows/ci.yml
 ```
 

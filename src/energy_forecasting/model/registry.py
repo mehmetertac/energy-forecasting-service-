@@ -33,6 +33,15 @@ FORECAST_COLUMNS = (
     "pred_q90",
 )
 
+ACTUAL_COLUMN_CANDIDATES = ("actual", "y", "power_mw")
+
+PRODUCTION_METRIC_KEYS = (
+    "mean_pinball_q10",
+    "mean_pinball_q50",
+    "mean_pinball_q90",
+    "mean_pi_coverage",
+)
+
 
 @dataclass(frozen=True)
 class ProductionModelInfo:
@@ -125,6 +134,14 @@ def _find_run_artifact(client: MlflowClient, run_id: str, suffix: str) -> str:
     raise FileNotFoundError(f"artifact *{suffix} not found under run {run_id}")
 
 
+def _resolve_actual_column(df: pd.DataFrame) -> pd.Series | None:
+    """Return actual MW from the first matching column, or None."""
+    for col in ACTUAL_COLUMN_CANDIDATES:
+        if col in df.columns:
+            return pd.to_numeric(df[col], errors="coerce")
+    return None
+
+
 def _normalize_forecast_frame(df: pd.DataFrame) -> pd.DataFrame:
     out = df.copy()
     if "timestamp" not in out.columns and "ds" in out.columns:
@@ -135,7 +152,13 @@ def _normalize_forecast_frame(df: pd.DataFrame) -> pd.DataFrame:
     missing = [c for c in FORECAST_COLUMNS if c not in out.columns]
     if missing:
         raise ValueError(f"forecast table missing columns: {missing}")
-    return out[list(FORECAST_COLUMNS)].sort_values(["plant_id", "timestamp", "horizon"]).reset_index(drop=True)
+    actual = _resolve_actual_column(out)
+    if actual is not None:
+        out["actual"] = actual
+    keep = list(FORECAST_COLUMNS)
+    if "actual" in out.columns:
+        keep.append("actual")
+    return out[keep].sort_values(["plant_id", "timestamp", "horizon"]).reset_index(drop=True)
 
 
 class CachedForecastModel(mlflow.pyfunc.PythonModel):
@@ -159,9 +182,10 @@ class CachedForecastModel(mlflow.pyfunc.PythonModel):
         horizon = int(model_input.iloc[0].get("horizon", 24))
         as_of = model_input.iloc[0].get("as_of")
 
+        output_cols = list(self.forecasts.columns)
         rows = self.forecasts[self.forecasts["plant_id"] == plant_id].copy()
         if rows.empty:
-            return pd.DataFrame(columns=list(FORECAST_COLUMNS))
+            return pd.DataFrame(columns=output_cols)
 
         if as_of is not None and not pd.isna(as_of):
             as_of_ts = pd.Timestamp(as_of, tz="UTC")
@@ -290,6 +314,49 @@ def load_production_pyfunc(
     mlflow.set_tracking_uri(uri)
     model = mlflow.pyfunc.load_model(info.uri)
     return info, model
+
+
+def list_cached_plants(
+    *,
+    model_name: str = REGISTERED_MODEL_NAME,
+    stage: str = "Production",
+    tracking_uri: str | Path | None = None,
+) -> list[str]:
+    """Return sorted plant ids available in the production forecast cache."""
+    _info, model = load_production_pyfunc(
+        model_name=model_name,
+        stage=stage,
+        tracking_uri=tracking_uri,
+    )
+    inner = model.unwrap_python_model()
+    plants = inner.forecasts["plant_id"].astype(str).unique().tolist()
+    return sorted(plants)
+
+
+def get_production_run_metrics(
+    *,
+    run_id: str | None = None,
+    model_name: str = REGISTERED_MODEL_NAME,
+    stage: str = "Production",
+    tracking_uri: str | Path | None = None,
+) -> dict[str, float | None]:
+    """Return mean pinball / coverage metrics logged on the production run."""
+    if run_id is None:
+        info = get_production_model(model_name=model_name, stage=stage, tracking_uri=tracking_uri)
+        run_id = info.run_id
+    client = _client(tracking_uri)
+    run = client.get_run(run_id)
+    metrics = run.data.metrics
+
+    def _lookup(key: str) -> float | None:
+        if key in metrics:
+            return float(metrics[key])
+        fallback = key.removeprefix("mean_")
+        if fallback in metrics:
+            return float(metrics[fallback])
+        return None
+
+    return {key: _lookup(key) for key in PRODUCTION_METRIC_KEYS}
 
 
 def package_local_forecast(
