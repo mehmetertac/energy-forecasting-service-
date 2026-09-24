@@ -45,8 +45,9 @@ class QuantileForecast(BaseModel):
     pred_q10: float
     pred_q50: float
     pred_q90: float
+    actual: float | None = Field(default=None, description="Observed MW when available in the cached table.")
 
-    def as_dict(self) -> dict[str, str | int | float]:
+    def as_dict(self) -> dict[str, str | int | float | None]:
         return self.model_dump()
 
 
@@ -70,6 +71,24 @@ class HealthResponse(BaseModel):
     model_version: str | None = None
     model_stage: str | None = None
     detail: str | None = None
+
+
+class PlantsResponse(BaseModel):
+    """Plant ids available in the production forecast cache."""
+
+    plants: list[str]
+
+
+class MetricsResponse(BaseModel):
+    """Recent validation metrics from the production model run."""
+
+    model_name: str
+    model_version: str
+    run_id: str
+    pinball_q10: float | None = None
+    pinball_q50: float | None = None
+    pinball_q90: float | None = None
+    pi_coverage: float | None = None
 
 
 def enforce_quantile_order(q10: float, q50: float, q90: float) -> tuple[float, float, float]:

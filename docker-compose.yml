@@ -32,13 +32,15 @@ services:
         condition: service_healthy
 
   dashboard:
-    image: python:3.11-slim-bookworm
-    working_dir: /app
-    volumes:
-      - ./dashboard/stub_server.py:/app/stub_server.py:ro
-    command: ["python", "stub_server.py"]
+    build:
+      context: .
+      dockerfile: dashboard/Dockerfile
+    environment:
+      API_URL: http://api:8000
     ports:
       - "8501:8501"
+    depends_on:
+      - api
 
 volumes:
   mlflow-data:

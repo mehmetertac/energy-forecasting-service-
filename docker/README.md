@@ -82,7 +82,7 @@ curl -X POST http://127.0.0.1:8000/forecast `
 
 After real training, mount your host `./mlruns` instead (register with `scripts/register_model.py` first).
 
-## Compose (API + MLflow + dashboard stub)
+## Compose (API + MLflow + dashboard)
 
 ```powershell
 docker compose up --build
@@ -92,7 +92,7 @@ docker compose up --build
 |---------|------|------|
 | `api` | 8000 | FastAPI batch inference |
 | `mlflow` | 5000 | Tracking + registry + artifact store |
-| `dashboard` | 8501 | Streamlit placeholder (stdlib HTTP stub) |
+| `dashboard` | 8501 | Streamlit dashboard (reads API via `API_URL`) |
 
 Seed Production model into the compose volume (once per fresh volume):
 
