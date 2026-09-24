@@ -53,17 +53,18 @@ Day-ahead TFT needs a **168h encoder**, known-future calendar/solar rows for all
 
 | Mode | When it fits | This repo |
 |------|----------------|-----------|
-| **Batch** | Day-ahead dispatch: forecasts fixed until the next scheduled run | **Default** — API serves cached quantiles from MLflow Model Registry |
+| **Batch** | Day-ahead dispatch: forecasts fixed until the next scheduled run | **Default** — nightly `scripts/daily_forecast.py` publishes to SQLite; API serves from `FORECAST_DB` |
 | **On-demand** | Intra-day reforecasts when new NWP or meter data arrives | Not implemented; `known_future` on the request schema is reserved for a later path |
 | **Streaming** | Sub-hourly updates pushed to subscribers | Out of scope; would matter for real-time reserve or ramp alerts |
 
-The API resolves `models:/tft-solar-quantile/Production` via `get_production_model()` — **not** a local checkpoint path.
+The batch job resolves `models:/tft-solar-quantile/Production`, slices the latest day-ahead origin per plant, and writes to **`artifacts/forecasts.db`** (override with `FORECAST_DB`). The API reads that store — **not** a checkpoint path and **not** MLflow at request time.
 
-### Register + serve locally
+### Register + batch + serve locally
 
 ```powershell
 pip install -e ".[serve]"
 python scripts/register_model.py
+python scripts/daily_forecast.py
 uvicorn energy_forecasting.api.app:app --host 127.0.0.1 --port 8000
 ```
 
@@ -110,7 +111,16 @@ curl -X POST http://127.0.0.1:8000/forecast -H "Content-Type: application/json" 
 }
 ```
 
-First request loads the pyfunc model from the registry (~seconds); warm lookups are sub-second. Quantiles are clipped to enforce P10 ≤ P50 ≤ P90.
+API lookups are sub-second once the batch job has published. Quantiles are clipped to enforce P10 ≤ P50 ≤ P90. Structured JSON logs include `request_id` and `model_version`; error payloads use `{code, message, request_id, model_version}`.
+
+### When to retrain
+
+Retrain when empirical **P10–P90 coverage** drifts off the nominal **80%** band — the Week 8 reserve-envelope signal. Under ~80% means dispatch is under-hedged; far above 80% means the band is too wide.
+
+1. Check `GET /metrics` → `pi_coverage` (and fold metrics in MLflow).
+2. Run `python scripts/train.py` (rolling-origin CV logs pinball, CRPS, coverage).
+3. Promote with `python scripts/register_model.py`.
+4. Publish the new version: `python scripts/daily_forecast.py`.
 
 ## Docker
 
@@ -118,10 +128,12 @@ Multi-stage **serve-only** image (~**1.39 GB** — no torch). Model artifacts ar
 
 ```powershell
 docker build -t energy-forecasting-api .
-docker compose up --build   # API :8000, MLflow :5000, dashboard :8501
+docker compose up --build   # batch job → API :8000, MLflow :5000, dashboard :8501
 ```
 
-Seed a smoke Production model into the compose volume, then open the dashboard on :8501 or hit `POST /forecast` — details in [docker/README.md](docker/README.md).
+On a fresh clone, compose runs a one-shot **batch** service (`--seed-if-missing`) before the API starts. Open the dashboard on :8501 or hit `POST /forecast` — details in [docker/README.md](docker/README.md).
+
+![Solar forecast dashboard](docs/dashboard.png)
 
 ### Dashboard
 
@@ -161,9 +173,11 @@ python scripts/train.py --n-splits 2 --max-epochs 2 --max-plants 2 --hidden-size
 src/energy_forecasting/data/    # OPSD + Open-Meteo, features
 src/energy_forecasting/model/   # TFT, metrics, CV, MLflow tracking
 src/energy_forecasting/api/     # P10/P50/P90 schema + FastAPI batch inference
+src/energy_forecasting/serving/ # SQLite forecast store + day-ahead publish pipeline
 src/energy_forecasting/model/registry.py  # MLflow Model Registry + get_production_model()
 scripts/train.py                # rolling-origin CV + tracking
 scripts/register_model.py       # register best run → Production
+scripts/daily_forecast.py       # nightly batch: registry → SQLite
 scripts/fetch_data.py
 tests/                          # unit tests on synthetic data (CI)
 dashboard/                      # Streamlit dashboard (:8501 in compose)

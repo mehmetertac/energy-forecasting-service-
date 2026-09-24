@@ -18,6 +18,8 @@ Guidance for agents working in **energy-forecasting-service**. Read this file fi
 | [src/energy_forecasting/data/](src/energy_forecasting/data/) | Fetch, disaggregate, calendar/solar/weather features |
 | [src/energy_forecasting/model/](src/energy_forecasting/model/) | TFT, metrics, rolling-origin CV, MLflow tracking |
 | [src/energy_forecasting/api/](src/energy_forecasting/api/) | Quantile forecast schema + FastAPI batch inference |
+| [src/energy_forecasting/serving/](src/energy_forecasting/serving/) | SQLite forecast store + day-ahead batch publish pipeline |
+| [scripts/daily_forecast.py](scripts/daily_forecast.py) | Nightly batch job: Production pyfunc → `FORECAST_DB` |
 | [tests/](tests/) | Unit tests on synthetic frames (CI does not download OPSD) |
 
 Headline contract: **probabilistic forecasts (P10/P50/P90)** through training metrics, MLflow, API schema, and the dashboard. Do not collapse the product to a point forecast.

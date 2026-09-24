@@ -82,7 +82,7 @@ curl -X POST http://127.0.0.1:8000/forecast `
 
 After real training, mount your host `./mlruns` instead (register with `scripts/register_model.py` first).
 
-## Compose (API + MLflow + dashboard)
+## Compose (batch + API + MLflow + dashboard)
 
 ```powershell
 docker compose up --build
@@ -90,11 +90,30 @@ docker compose up --build
 
 | Service | Port | Role |
 |---------|------|------|
-| `api` | 8000 | FastAPI batch inference |
 | `mlflow` | 5000 | Tracking + registry + artifact store |
+| `batch` | — | One-shot: `daily_forecast.py --seed-if-missing` → SQLite on `forecast-data` volume |
+| `api` | 8000 | FastAPI — serves `FORECAST_DB=/data/forecasts.db` (starts after batch succeeds) |
 | `dashboard` | 8501 | Streamlit dashboard (reads API via `API_URL`) |
 
-Seed Production model into the compose volume (once per fresh volume):
+Fresh-clone flow: MLflow starts → **batch** seeds Production if the registry is empty, publishes day-ahead rows to `/data/forecasts.db` → API serves → dashboard on :8501.
+
+### Nightly batch rerun
+
+```powershell
+docker compose run --rm batch
+```
+
+Host cron example (06:00 daily):
+
+```cron
+0 6 * * * cd /path/to/energy-forecasting-service && docker compose run --rm batch
+```
+
+Remove `--seed-if-missing` from compose once a real Production model is registered via `scripts/register_model.py`.
+
+### Manual seed (optional)
+
+For standalone API smoke without compose batch:
 
 ```powershell
 docker run --rm `
@@ -108,6 +127,7 @@ Or register a real run after training:
 ```powershell
 # host: python scripts/register_model.py  (writes to ./mlruns)
 # then copy or mount ./mlruns into the mlflow volume
+# then: docker compose run --rm batch
 ```
 
-Verified: `POST /forecast` returns 24 P10/P50/P90 rows for `DE_PV_001` when the volume holds `tft-solar-quantile` Production.
+Verified: after batch completes, `POST /forecast` returns 24 P10/P50/P90 rows for `DE_PV_001`.
