@@ -10,7 +10,7 @@ from pathlib import Path
 import pandas as pd
 from mlflow import MlflowClient
 
-from energy_forecasting.model.registry import REGISTERED_MODEL_NAME, package_local_forecast, _default_tracking_uri
+from energy_forecasting.model.registry import REGISTERED_MODEL_NAME, _default_tracking_uri, package_local_forecast
 
 
 def sample_forecast_parquet(path: Path) -> None:

@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from energy_forecasting.config import FORECAST_MAX_AGE_HOURS, FORECAST_DB
+from energy_forecasting.config import FORECAST_DB, FORECAST_MAX_AGE_HOURS
 from energy_forecasting.model.registry import FORECAST_COLUMNS
 
 FORECAST_ROW_COLUMNS = (*FORECAST_COLUMNS, "actual")

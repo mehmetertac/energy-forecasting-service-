@@ -28,8 +28,8 @@ from energy_forecasting.serving.store import (
     StaleForecastError,
     get_batch_metadata,
     get_forecasts,
-    list_plants as store_list_plants,
 )
+from energy_forecasting.serving.store import list_plants as store_list_plants
 
 logger = logging.getLogger(__name__)
 

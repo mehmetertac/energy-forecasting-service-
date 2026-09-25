@@ -7,7 +7,6 @@ from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pandas as pd
-from mlflow import MlflowClient
 
 from energy_forecasting.config import DEFAULT_HORIZON, FORECAST_DB, MODEL_MAX_AGE_HOURS
 from energy_forecasting.model.registry import (

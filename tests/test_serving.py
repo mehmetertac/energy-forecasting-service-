@@ -15,8 +15,8 @@ from energy_forecasting.serving.batch import (
     StaleModelError,
     publish_day_ahead_forecasts,
     slice_day_ahead_forecasts,
-    validate_forecast_frame,
     validate_features_parquet,
+    validate_forecast_frame,
 )
 from energy_forecasting.serving.store import (
     EmptyForecastError,
