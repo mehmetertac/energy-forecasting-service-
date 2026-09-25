@@ -1,6 +1,6 @@
 # Handover
 
-**Last updated:** 2026-09-24
+**Last updated:** 2026-09-25
 
 Week 9 project: **energy-forecasting-service** — ship the Week 5 TFT with MLOps (tracking first).
 
@@ -125,6 +125,12 @@ Logged **metrics (per fold + mean):** `pinball_q10`, `pinball_q50`, `pinball_q90
 ## Smoke tracking (2026-09-19)
 
 Three 2-fold / 2-epoch / 2-plant runs, `hidden_size` ∈ {16, 32, 64}. Best by `mean_crps`: `tft-h16-smoke` → registered as `tft-solar-quantile` v1 Production.
+
+## v1.0.0 release (2026-09-25)
+
+- README rewritten as product page: architecture diagram, dashboard GIF, 3-command quickstart, API example, dispatch narrative, design decisions.
+- Public write-up: [docs/linkedin.md](docs/linkedin.md).
+- Tagged `v1.0.0` on default branch after CI green + clean-clone compose smoke.
 
 ## Suggested next step
 
