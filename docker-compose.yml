@@ -21,10 +21,12 @@ services:
 
   batch:
     build: .
+    user: "0:0"
     command: python scripts/daily_forecast.py --seed-if-missing
     environment:
       MLFLOW_TRACKING_URI: http://mlflow:5000
       FORECAST_DB: /data/forecasts.db
+      GIT_PYTHON_REFRESH: quiet
     volumes:
       - mlflow-data:/mlflow
       - forecast-data:/data
