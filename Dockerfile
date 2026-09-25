@@ -24,8 +24,10 @@ RUN groupadd --gid 1000 app && \
 COPY --from=builder /install /usr/local
 COPY pyproject.toml README.md ./
 COPY src/ src/
+COPY scripts/ scripts/
 
-RUN pip install --no-cache-dir --no-deps . && \
+RUN mkdir -p /data && chown app:app /data && \
+    pip install --no-cache-dir --no-deps . && \
     rm -rf /root/.cache
 
 USER app

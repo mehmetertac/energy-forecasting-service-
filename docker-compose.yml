@@ -19,17 +19,35 @@ services:
       retries: 5
       start_period: 15s
 
+  batch:
+    build: .
+    command: python scripts/daily_forecast.py --seed-if-missing
+    environment:
+      MLFLOW_TRACKING_URI: http://mlflow:5000
+      FORECAST_DB: /data/forecasts.db
+    volumes:
+      - mlflow-data:/mlflow
+      - forecast-data:/data
+    depends_on:
+      mlflow:
+        condition: service_healthy
+    restart: "no"
+
   api:
     build: .
     ports:
       - "8000:8000"
     environment:
       MLFLOW_TRACKING_URI: http://mlflow:5000
+      FORECAST_DB: /data/forecasts.db
     volumes:
       - mlflow-data:/mlflow
+      - forecast-data:/data
     depends_on:
       mlflow:
         condition: service_healthy
+      batch:
+        condition: service_completed_successfully
 
   dashboard:
     build:
@@ -44,3 +62,4 @@ services:
 
 volumes:
   mlflow-data:
+  forecast-data:

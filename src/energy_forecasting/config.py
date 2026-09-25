@@ -1,5 +1,6 @@
 """Project-wide paths and default forecasting settings."""
 
+import os
 from pathlib import Path
 
 ROOT_DIR = Path(__file__).resolve().parents[2]
@@ -23,6 +24,10 @@ METRICS_TFT_PLANT_CSV = ARTIFACTS_DIR / "metrics_tft_plant.csv"
 OOF_TFT_PARQUET = ARTIFACTS_DIR / "oof_tft.parquet"
 TFT_CHECKPOINT_DIR = ARTIFACTS_DIR / "checkpoints" / "tft"
 QUANTILE_BAND_PLOT = ARTIFACTS_DIR / "plots" / "quantile_bands.png"
+
+FORECAST_DB = Path(os.environ.get("FORECAST_DB", str(ARTIFACTS_DIR / "forecasts.db")))
+MODEL_MAX_AGE_HOURS = float(os.environ.get("MODEL_MAX_AGE_HOURS", "24"))
+FORECAST_MAX_AGE_HOURS = float(os.environ.get("FORECAST_MAX_AGE_HOURS", "36"))
 
 CV_N_SPLITS = 5
 

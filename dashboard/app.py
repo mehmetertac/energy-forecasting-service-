@@ -52,13 +52,29 @@ with st.sidebar:
     plant_id = st.selectbox("Site", plants)
     horizon = st.slider("Forecast horizon (hours)", min_value=1, max_value=24, value=24)
 
+def _api_error_message(exc: httpx.HTTPStatusError) -> str:
+    try:
+        body = exc.response.json()
+        detail = body.get("detail")
+        if isinstance(detail, dict) and detail.get("message"):
+            return str(detail["message"])
+        if isinstance(detail, str):
+            return detail
+    except Exception:
+        pass
+    return exc.response.text
+
+
 try:
     payload = fetch_forecast(plant_id=plant_id, horizon=horizon)
 except httpx.HTTPStatusError as exc:
+    message = _api_error_message(exc)
     if exc.response.status_code == 404:
-        st.error(f"No cached forecasts for {plant_id!r}.")
+        st.error(f"No cached forecasts for {plant_id!r}: {message}")
+    elif exc.response.status_code == 503:
+        st.error(f"Forecast store unavailable: {message}")
     else:
-        st.error(f"Forecast request failed: {exc.response.text}")
+        st.error(f"Forecast request failed: {message}")
     st.stop()
 except httpx.HTTPError as exc:
     st.error(f"Forecast request failed: {exc}")
