@@ -124,7 +124,7 @@ def publish_day_ahead_forecasts(
 
     try:
         info = get_production_model(model_name=model_name, tracking_uri=tracking_uri)
-    except RuntimeError as exc:
+    except Exception as exc:
         if not seed_if_missing:
             raise
         logger.warning("no production model — seeding synthetic forecasts: %s", exc)
