@@ -1,6 +1,6 @@
 # Handover
 
-**Last updated:** 2026-09-25
+**Last updated:** 2026-11-05
 
 Week 9 project: **energy-forecasting-service** — ship the Week 5 TFT with MLOps (tracking first).
 
@@ -21,6 +21,8 @@ Remote: https://github.com/mehmetertac/energy-forecasting-service-.git
 | Unit tests + pre-commit + GitHub Actions CI (no torch) | Done — serving store, batch job, API 503/404, schema + 422 validation; ruff + pytest + Docker build on every push/PR |
 | Docker image + compose | Done — multi-stage serve image (~1.39 GB); compose: MLflow → one-shot batch → API → dashboard |
 | Streamlit dashboard | Done — site selector, horizon slider, P50 + P10–P90 band over actuals, pinball/coverage panel |
+| README API reference table + `CHANGELOG.md` | Done — v1.0.1 portfolio polish |
+| `docs/dashboard.png` | Done — live Streamlit screenshot (compose smoke 2026-11-05) |
 
 ## Goal
 
@@ -83,7 +85,8 @@ python scripts/fetch_data.py
 | `scripts/seed_docker_mlruns.py` | Seed `tft-solar-quantile` Production for Docker smoke |
 | `docker-compose.yml` | MLflow + one-shot batch + API + dashboard |
 | `Dockerfile` | Multi-stage serve image (uvicorn, non-root, `/data` volume) |
-| `docs/dashboard.png` | README dashboard screenshot |
+| `docs/dashboard.png` | README hero screenshot (Streamlit, not matplotlib) |
+| `docs/dashboard.gif` | Short dashboard demo (horizon scrub) |
 
 ## Core module API
 
@@ -126,6 +129,12 @@ Logged **metrics (per fold + mean):** `pinball_q10`, `pinball_q50`, `pinball_q90
 
 Three 2-fold / 2-epoch / 2-plant runs, `hidden_size` ∈ {16, 32, 64}. Best by `mean_crps`: `tft-h16-smoke` → registered as `tft-solar-quantile` v1 Production.
 
+## v1.0.1 release (2026-11-05)
+
+- README **API reference** table (`/health`, `/plants`, `/metrics`, `/forecast`, `/schema`).
+- `CHANGELOG.md` (Keep a Changelog); refreshed `docs/dashboard.png` from running Streamlit (:8501).
+- Clean-volume `docker compose up --build` smoke: batch seed → API health → `POST /forecast` 24 rows.
+
 ## v1.0.0 release (2026-09-25)
 
 - README rewritten as product page: architecture diagram, dashboard GIF, 3-command quickstart, API example, dispatch narrative, design decisions.
@@ -139,4 +148,4 @@ Three 2-fold / 2-epoch / 2-plant runs, `hidden_size` ∈ {16, 32, 64}. Best by `
 
 ## Key commit
 
-Batch pipeline hardening: `daily_forecast.py`, SQLite serving store, compose one-shot batch, failure-mode pass, README retrain note + dashboard screenshot.
+Portfolio polish — README API reference, CHANGELOG, Streamlit dashboard screenshot, release v1.0.1 (pending push).

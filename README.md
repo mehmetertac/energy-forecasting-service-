@@ -4,7 +4,9 @@
 
 Probabilistic day-ahead solar forecasts (**P10 / P50 / P90**) shipped end to end: training → MLflow → registry → batch job → FastAPI → Streamlit.
 
-![Solar forecast dashboard — P50 with P10–P90 band over actuals](docs/dashboard.gif)
+![Solar forecast dashboard — P50 with P10–P90 band over actuals](docs/dashboard.png)
+
+![Dashboard demo — site selector and horizon scrub](docs/dashboard.gif)
 
 Ported from [`multi-site-solar-hierarchy`](https://github.com/mehmetertac/multi-site-solar-hierarchy) (TFT + feature pipeline). MinT reconciliation stays in that repo; this service ships the global plant-level TFT.
 
@@ -95,6 +97,22 @@ flowchart LR
 ```
 
 Quantiles are clipped to enforce P10 ≤ P50 ≤ P90. Structured JSON logs include `request_id` and `model_version`; error payloads use `{code, message, request_id, model_version}`.
+
+## API reference
+
+All JSON error bodies use `{code, message, request_id, model_version?}`. Successful responses and errors echo **`X-Request-ID`** (client may send `X-Request-ID` on the request).
+
+| Method | Path | Success | Error codes |
+|--------|------|---------|-------------|
+| `GET` | `/health` | `200` — `status`, production `model_name` / `model_version` / `model_stage`, `inference_mode: batch` | `503` — `empty_forecasts`, `stale_forecast`; or `200` with `status: unhealthy` and `detail` on unexpected failures |
+| `GET` | `/plants` | `200` — `{ "plants": ["DE_PV_001", …] }` | `503` — `empty_forecasts`, `stale_forecast` |
+| `GET` | `/metrics` | `200` — `pinball_q10/q50/q90`, `pi_coverage`, `run_id`, model identity | `503` — `empty_forecasts`, `metrics_unavailable` |
+| `POST` | `/forecast` | `200` — `ForecastResponse` with P10/P50/P90 per horizon step | `404` — `unknown_plant`; `422` — validation (bad `plant_id`, `horizon` ∉ 1–24); `503` — `empty_forecasts`, `stale_forecast` |
+| `GET` | `/schema` | `200` — example forecast envelope (empty `forecasts` list) | — |
+
+**`POST /forecast` body:** `plant_id` (string), `horizon` (int, default 24, max 24), optional `as_of` (UTC anchor; batch mode uses latest cached origin when omitted), optional `known_future` (ignored in batch mode; reserved for on-demand inference).
+
+OpenAPI: `http://localhost:8000/docs` when the API is running.
 
 ## Who consumes these quantiles?
 
